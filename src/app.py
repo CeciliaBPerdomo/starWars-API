@@ -109,6 +109,105 @@ def usersModif_porId(user_id):
     db.session.commit()
     return jsonify({"msg": "Usuario modificado"}), 200
 
+
+########################
+#       Planetas       #
+########################
+# Muestra todos los planetas
+@app.route('/planets', methods=['GET'])
+def all_planets():
+    planetas = Planets.query.all()
+    if planetas == []: 
+        return jsonify({"msg": "No existe ningún planeta"}), 404
+    results = list(map(lambda x: x.serialize(), planetas))
+    return jsonify(results), 200
+
+# Muestra planetas por id
+@app.route('/planets/<int:planet_id>', methods=['GET'])
+def planets_porId(planet_id):
+    planeta = Planets.query.filter_by(id=planet_id).first()
+    if planeta is None: 
+        return jsonify({"msg": "No existe el planeta"}), 404
+    planet = planeta.serialize()
+    return jsonify(planet), 200
+
+# Alta de un planeta
+@app.route('/planets', methods=['POST'])
+def addPlanets():
+    body = json.loads(request.data)
+
+    queryNewPlanet = Planets.query.filter_by(name=body["name"]).first()
+    
+    if queryNewPlanet is None:
+        new_planet = Planets(
+            name=body["name"],
+            population=body["population"],
+            orbital_period=body["orbital_period"],
+            rotation_period=body["rotation_period"],
+            diameter=body["diameter"],
+            climate=body["climate"],
+            gravity=body["gravity"],
+            terrain=body["terrain"], 
+            surface_water=body["surface_water"]
+        )
+        
+        db.session.add(new_planet)
+        db.session.commit()
+        return jsonify(new_planet.serialize()), 200
+    
+    return jsonify({"msg": "Planeta ya creado" }), 400
+
+# Modifica un planeta por id
+@app.route('/planets/<int:planets_id>', methods=['PUT'])
+def planetsModif_porId(planets_id):
+    planeta = Planets.query.filter_by(id=planets_id).first()
+    body = json.loads(request.data)
+
+    if planeta is None:
+        return jsonify( {"msg": "No existe el planeta"}), 400    
+
+    if "name" in body:
+        planeta.name = body["name"]
+
+    if "population" in body:    
+        planeta.population=body["population"]
+    
+    if "orbital_period" in body:    
+        planeta.orbital_period=body["orbital_period"]
+    
+    if "rotation_period" in body:    
+        planeta.rotation_period=body["rotation_period"]
+    
+    if "diameter" in body: 
+        planeta.diameter=body["diameter"]
+    
+    if "climate" in body: 
+        planeta.climate=body["climate"]
+    
+    if "gravity" in body: 
+        planeta.gravity=body["gravity"]
+    
+    if "terrain" in body: 
+        planeta.terrain=body["terrain"]
+
+    if "surface_water" in body: 
+        planeta.surface_water=body["surface_water"]
+    
+    db.session.commit()
+    return jsonify({"msg": "Planeta modificado"}), 202
+
+# Borra un Planeta
+@app.route('/planets/<int:planet_id>', methods=['DELETE'])
+def deletePlanet(planet_id):
+    planetId = Planets.query.filter_by(id=planet_id).first()
+  
+    if planetId is None: 
+        return jsonify({"msg": "Planeta no encontrado"}), 404
+
+    db.session.delete(planetId)
+    db.session.commit()
+    return jsonify({"msg": "Planeta borrado"}), 200
+
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
